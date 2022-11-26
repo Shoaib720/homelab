@@ -1,0 +1,34 @@
+version: '2'
+services:
+  postgresql:
+    image: docker.io/bitnami/postgresql:11
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=no
+      - POSTGRESQL_USERNAME=keycloak
+      - POSTGRESQL_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
+      - POSTGRESQL_DATABASE=db_keycloak
+    volumes:
+      - 'postgresql_data:/bitnami/postgresql'
+
+  keycloak:
+    image: docker.io/bitnami/keycloak:19
+    volumes:
+      - './certs:/opt/bitnami/keycloak/certs:ro'
+    environment:
+      - KEYCLOAK_ADMIN_USER=shoaib
+      - KEYCLOAK_ADMIN_PASSWORD=Shoaib@123
+      - KEYCLOAK_DATABASE_NAME=db_keycloak
+      - KEYCLOAK_DATABASE_USER=keycloak
+      - KEYCLOAK_DATABASE_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
+      - KEYCLOAK_HTTPS_USE_PEM=true
+      - KEYCLOAK_HTTPS_CERTIFICATE_FILE=/opt/bitnami/keycloak/certs/keycloak.tadrees.ml.chain.pem
+      - KEYCLOAK_HTTPS_CERTIFICATE_KEY_FILE=/opt/bitnami/keycloak/certs/keycloak.tadrees.ml.key
+    depends_on:
+      - postgresql
+    ports:
+      - "80:8080"
+
+volumes:
+  postgresql_data:
+    driver: local
