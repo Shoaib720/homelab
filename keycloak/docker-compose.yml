@@ -7,7 +7,7 @@ services:
       - ALLOW_EMPTY_PASSWORD=no
       - POSTGRESQL_USERNAME=keycloak
       - POSTGRESQL_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
-      - POSTGRESQL_DATABASE=db_keycloak
+      - POSTGRESQL_DATABASE=keycloak
     volumes:
       - 'postgresql_data:/bitnami/postgresql'
 
@@ -18,9 +18,10 @@ services:
     environment:
       - KEYCLOAK_ADMIN_USER=shoaib
       - KEYCLOAK_ADMIN_PASSWORD=Shoaib@123
-      - KEYCLOAK_DATABASE_NAME=db_keycloak
+      - KEYCLOAK_DATABASE_NAME=keycloak
       - KEYCLOAK_DATABASE_USER=keycloak
       - KEYCLOAK_DATABASE_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
+      - KEYCLOAK_ENABLE_HTTPS=true
       - KEYCLOAK_HTTPS_USE_PEM=true
       - KEYCLOAK_HTTPS_CERTIFICATE_FILE=/opt/bitnami/keycloak/certs/keycloak.tadrees.ml.chain.pem
       - KEYCLOAK_HTTPS_CERTIFICATE_KEY_FILE=/opt/bitnami/keycloak/certs/keycloak.tadrees.ml.key
@@ -28,6 +29,7 @@ services:
       - postgresql
     ports:
       - "80:8080"
+      - "443:8443"
 
 volumes:
   postgresql_data:
