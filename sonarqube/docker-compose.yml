@@ -12,7 +12,7 @@ services:
   sonarqube:
     image: docker.io/bitnami/sonarqube:9
     ports:
-      - '80:9000'
+      - '9090:9000'
     volumes:
       - 'sonarqube_data:/bitnami/sonarqube'
     depends_on:

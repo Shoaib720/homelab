@@ -12,8 +12,7 @@ services:
       - 'postgresql_data:/bitnami/postgresql'
 
   keycloak:
-    image: docker.io/bitnami/keycloak:24.0.3
-    #image: jboss/keycloak:14.0.0
+    image: docker.io/bitnami/keycloak:19
     volumes:
       - './certs:/opt/bitnami/keycloak/certs:ro'
     environment:
@@ -22,7 +21,7 @@ services:
       - KEYCLOAK_DATABASE_NAME=keycloak
       - KEYCLOAK_DATABASE_USER=keycloak
       - KEYCLOAK_DATABASE_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
-      - KEYCLOAK_ENABLE_HTTPS=false
+      - KEYCLOAK_ENABLE_HTTPS=true
       - KEYCLOAK_HTTPS_USE_PEM=true
       - KEYCLOAK_HTTPS_CERTIFICATE_FILE=/opt/bitnami/keycloak/certs/keycloak.tadrees.ml.chain.pem
       - KEYCLOAK_HTTPS_CERTIFICATE_KEY_FILE=/opt/bitnami/keycloak/certs/keycloak.tadrees.ml.key
@@ -31,13 +30,6 @@ services:
     ports:
       - "80:8080"
       - "443:8443"
-
-  grafana:
-    image: grafana/grafana:latest
-    volumes:
-      - './grafana_configs/grafana.ini:/etc/grafana/grafana.ini'
-    ports:
-      - "3000:3000"
 
 volumes:
   postgresql_data:

@@ -3,3 +3,4 @@
 **/*.cer
 **/*.crt
 **/*.pfx
+**/*.DS_Store
