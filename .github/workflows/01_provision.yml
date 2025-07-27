@@ -3,7 +3,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  apply:
+  provision:
+    name: Provision
     runs-on: ubuntu-latest
     environment: DEV
     env:
@@ -31,6 +32,12 @@ jobs:
         with:
           terraform_version: 1.12.2
 
+      - name: Write GitHub Keys to File
+        run: |
+          echo "${{ secrets.TRAIN_SERVER_GITHUB_RSA }}" > ~/.ssh/train_server_github_rsa
+          chmod 600 ~/.ssh/train_server_github_rsa
+          ls -al ~/.ssh
+
       - name: Terraform Init
         working-directory: terraform
         run: terraform init
@@ -42,3 +49,39 @@ jobs:
       - name: Terraform Apply
         working-directory: terraform
         run: terraform apply -auto-approve tfplan
+
+      - name: Output EC2 Public IP
+        working-directory: terraform
+        id: output-ip
+        run: |
+          echo "vm_ip=$(terraform output -raw vm_public_ip)" >> $GITHUB_OUTPUT
+
+      - name: Cleanup
+        run: |
+          rm -f ~/.ssh/lab-kp*
+
+  configure:
+    name: Configure
+    environment: DEV
+    runs-on: ubuntu-latest
+    needs: provision
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure SSH Key Pair
+        run: |
+          mkdir ~/.ssh
+          echo "${{ secrets.LAB_SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/lab-kp
+          chmod 600 ~/.ssh/lab-kp
+          echo "${{ secrets.LAB_SERVER_SSH_PUBLIC_KEY }}" > ~/.ssh/lab-kp.pub
+          ls -al ~/.ssh
+
+      - name: Copy deploy script to server
+        run: |
+          scp -i ~/.ssh/lab-kp -o StrictHostKeyChecking=no setup.sh ubuntu@${{ needs.provision.outputs.vm_ip }}:/home/ubuntu/setup.sh
+
+      - name: SSH and run deploy
+        run: |
+          ssh -i ~/.ssh/lab-kp -o StrictHostKeyChecking=no ubuntu@${{ needs.provision.outputs.vm_ip }} \
+          bash /home/ubuntu/setup.sh"

@@ -46,6 +46,18 @@ resource "aws_instance" "lab_server" {
   tags = {
     Name = "DevOps Lab"
   }
+
+  provisioner "file" {
+    source      = "~/.ssh/train_server_github_rsa"
+    destination = "/home/ubuntu/.ssh/id_rsa"
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/lab-kp")
+    host        = self.public_ip
+  }
 }
 
 output "vm_public_ip" {
