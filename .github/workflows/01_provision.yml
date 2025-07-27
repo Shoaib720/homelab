@@ -9,6 +9,8 @@ jobs:
     environment: DEV
     env:
       AWS_REGION: ap-south-1
+    outputs:
+      vm_ip: ${{ steps.output-ip.outputs.vm_ip }}
     steps:
       - uses: actions/checkout@v4
 
