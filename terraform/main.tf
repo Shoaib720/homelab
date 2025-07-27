@@ -1,0 +1,53 @@
+resource "aws_key_pair" "lab_key" {
+  key_name   = "lab-key"
+  public_key = file("~/.ssh/lab-kp.pub")
+#   public_key = file("${path.module}/lab-kp.pub")
+}
+
+resource "aws_security_group" "allow_ssh" {
+  name        = "allow_ssh"
+  description = "Allow SSH access"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # WARNING: Open to all
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # WARNING: Open to all
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # WARNING: Open to all
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "lab_server" {
+  ami                         = "ami-0f918f7e67a3323f0"
+  instance_type               = "m6i.xlarge"
+  key_name                    = aws_key_pair.lab_key.key_name
+  security_groups        = [aws_security_group.allow_ssh.name]
+
+  tags = {
+    Name = "DevOps Lab"
+  }
+}
+
+output "vm_public_ip" {
+  value = aws_instance.lab_server.public_ip
+}

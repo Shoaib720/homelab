@@ -1,0 +1,44 @@
+name: Provision Homelab
+on:
+  workflow_dispatch:
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: DEV
+    env:
+      AWS_REGION: ap-south-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Configure SSH Key Pair
+        run: |
+          mkdir ~/.ssh
+          echo "${{ secrets.LAB_SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/lab-kp
+          chmod 600 ~/.ssh/lab-kp
+          echo "${{ secrets.LAB_SERVER_SSH_PUBLIC_KEY }}" > ~/.ssh/lab-kp.pub
+          ls -al ~/.ssh
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve tfplan
