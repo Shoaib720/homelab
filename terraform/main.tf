@@ -48,7 +48,7 @@ resource "aws_instance" "lab_server" {
   }
 
   provisioner "file" {
-    source      = "~/.ssh/train_server_github_rsa"
+    source      = "~/.ssh/personal_github_rsa"
     destination = "/home/ubuntu/.ssh/id_rsa"
   }
 
