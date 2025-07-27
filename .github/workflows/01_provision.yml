@@ -81,7 +81,7 @@ jobs:
 
       - name: Copy deploy script to server
         run: |
-          scp -i ~/.ssh/lab-kp -o StrictHostKeyChecking=no setup.sh ubuntu@${{ needs.provision.outputs.vm_ip }}:/home/ubuntu/setup.sh
+          scp -i ~/.ssh/lab-kp -o StrictHostKeyChecking=no terraform/setup.sh ubuntu@${{ needs.provision.outputs.vm_ip }}:/home/ubuntu/setup.sh
 
       - name: SSH and run deploy
         run: |
