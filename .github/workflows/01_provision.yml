@@ -86,4 +86,4 @@ jobs:
       - name: SSH and run deploy
         run: |
           ssh -i ~/.ssh/lab-kp -o StrictHostKeyChecking=no ubuntu@${{ needs.provision.outputs.vm_ip }} \
-          bash /home/ubuntu/setup.sh"
+          "bash /home/ubuntu/setup.sh"
