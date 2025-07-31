@@ -1,16 +1,24 @@
-version: '3.9'
+networks:
+  homelab_network:
+    name: homelab_network
+    external: true
 
 services:
   jenkins:
-    image: docker.io/shoaib1999/jenkins-docker:lts-jdk11
-    ports:
-      - '8090:8080'
-      - '50000:50000'
+    image: jenkins/jenkins:lts-jdk11
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    # ports:
+    #   - '8080:8080'
+    #   - '50000:50000'
+    networks:
+      - homelab_network
     volumes:
       - 'jenkins_home:/var/jenkins_home'
-      - '/var/run/docker.sock:/var/run/docker.sock'
-    group_add:
-      - '997'
+      # - '/var/run/docker.sock:/var/run/docker.sock'
+    # group_add:
+    #   - '997'
     
 volumes:
   jenkins_home:
