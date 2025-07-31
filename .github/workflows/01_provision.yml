@@ -56,7 +56,7 @@ jobs:
         working-directory: terraform
         id: output-ip
         run: |
-          echo "vm_ip=$(terraform output -raw vm_public_ip)" >> $GITHUB_OUTPUT
+          echo "vm_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
 
       - name: Cleanup
         run: |
