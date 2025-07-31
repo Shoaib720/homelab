@@ -4,7 +4,7 @@ on:
 
 jobs:
   provision:
-    name: Provision
+    name: Provision Server
     runs-on: ubuntu-latest
     environment: DEV
     env:
@@ -111,8 +111,10 @@ jobs:
           fi
 
   configure:
-    name: Configure
-    environment: DEV
+    name: Configure Server
+    environment:
+      name: DEV
+      url: 'https://homelab.deploywizard.in'
     runs-on: ubuntu-latest
     needs: [provision,update_dns]
     steps:
