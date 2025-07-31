@@ -6,13 +6,10 @@ on:
         type: boolean
         description: Create AMI
         default: true
-      # snapshot_data_volume:
-      #   type: boolean
-      #   description: Snapshot Data Volume
-      #   default: true
 
 jobs:
   destroy:
+    name: Decommission Server
     runs-on: ubuntu-latest
     environment: DEV
     env:
