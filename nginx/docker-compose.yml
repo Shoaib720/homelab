@@ -7,7 +7,7 @@ services:
   nginx:
     container_name: nginx
     restart: unless-stopped
-    image: nginx:latest
+    image: nginx:1.29
     volumes:
       - ./conf.d:/etc/nginx/conf.d
       - ./ssl:/etc/nginx/ssl
