@@ -3,7 +3,6 @@ networks:
     name: homelab_network
     external: true
 
-version: '2'
 services:
   postgresql:
     image: docker.io/bitnami/postgresql:11
@@ -30,7 +29,7 @@ services:
       - KEYCLOAK_DATABASE_USER=keycloak
       - KEYCLOAK_DATABASE_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
       - KC_HOSTNAME=keycloak.deploywizard.in
-      - KEYCLOAK_PROXY_HEADERS=x-forwarded-for
+      - KEYCLOAK_PROXY_HEADERS=xforwarded
       - KC_PROXY=edge
       - KEYCLOAK_ENABLE_HTTPS=false
       - KEYCLOAK_HTTPS_USE_PEM=true
