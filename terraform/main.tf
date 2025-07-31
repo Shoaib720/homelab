@@ -59,7 +59,3 @@ resource "aws_instance" "lab_server" {
     host        = self.public_ip
   }
 }
-
-output "vm_public_ip" {
-  value = aws_instance.lab_server.public_ip
-}
