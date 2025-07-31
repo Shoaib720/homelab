@@ -27,6 +27,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
+      - name: Configure SSH Key Pair
+        run: |
+          mkdir ~/.ssh
+          echo "${{ secrets.LAB_SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/lab-kp
+          chmod 600 ~/.ssh/lab-kp
+          echo "${{ secrets.LAB_SERVER_SSH_PUBLIC_KEY }}" > ~/.ssh/lab-kp.pub
+          ls -al ~/.ssh
+
+      - name: Write GitHub Keys to File
+        run: |
+          echo "${{ secrets.PERSONAL_GITHUB_RSA_PRIVATE }}" > ~/.ssh/personal_github_rsa
+          chmod 600 ~/.ssh/personal_github_rsa
+          ls -al ~/.ssh
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -82,3 +96,7 @@ jobs:
       - name: Terraform Destroy
         working-directory: terraform
         run: terraform destroy -auto-approve
+
+      - name: Cleanup
+        run: |
+          rm -f ~/.ssh/lab-kp* ~/.ssh/personal_github_rsa
