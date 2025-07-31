@@ -26,3 +26,6 @@ mkdir ~/projects
 cd projects
 
 git clone git@github.com:Shoaib720/docker-compose.git
+cd docker-compose
+sudo chmod u+x provision.sh
+sudo ./provision.sh
