@@ -23,10 +23,17 @@ sudo systemctl enable docker
 sudo usermod -aG docker ${USER}
 
 
-mkdir ~/projects
-cd projects
+mkdir -p ~/projects
+cd ~/projects
 
-git clone git@github.com:Shoaib720/docker-compose.git
-cd docker-compose
+if [ ! -d "docker-compose/.git" ]; then
+  echo "Cloning repo..."
+  git clone git@github.com:Shoaib720/docker-compose.git
+else
+  echo "Repo already exists. Pulling latest changes..."
+  cd docker-compose
+  git pull
+fi
+
 sudo chmod u+x provision.sh
 sudo ./provision.sh

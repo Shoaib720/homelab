@@ -6,6 +6,7 @@ networks:
 services:
   jenkins:
     image: jenkins/jenkins:2.521-jdk21
+    restart: unless-stopped
     # build:
     #   context: .
     #   dockerfile: Dockerfile
