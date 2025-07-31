@@ -55,6 +55,12 @@ jobs:
           echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
           echo $AMI_ID > ami_id.txt
 
+      - name: Wait for AMI to be available
+        run: |
+          echo "Waiting for AMI $AMI_ID to become available..."
+          aws ec2 wait image-available --image-ids $AMI_ID
+          echo "AMI $AMI_ID created."
+
       # - name: Snapshot data volume
       #   if: ${{ github.event.inputs.snapshot_data_volume == 'true' && env.DATA_VOL_ID != 'null' }}
       #   run: |
@@ -73,6 +79,6 @@ jobs:
             ami_id.txt
             # snapshot_id.txt
 
-      # - name: Terraform Destroy
-      #   working-directory: terraform
-      #   run: terraform destroy -auto-approve
+      - name: Terraform Destroy
+        working-directory: terraform
+        run: terraform destroy -auto-approve
