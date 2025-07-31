@@ -75,15 +75,45 @@ jobs:
           aws ec2 wait image-available --image-ids $AMI_ID
           echo "AMI $AMI_ID created."
 
-      # - name: Snapshot data volume
-      #   if: ${{ github.event.inputs.snapshot_data_volume == 'true' && env.DATA_VOL_ID != 'null' }}
-      #   run: |
-      #     SNAP_ID=$(aws ec2 create-snapshot \
-      #       --volume-id "$DATA_VOL_ID" \
-      #       --description "homelab-data-$(date +%Y%m%d%H%M%S)" \
-      #       --query 'SnapshotId' --output text)
-      #     echo "SNAPSHOT_ID=$SNAP_ID" >> $GITHUB_ENV
-      #     echo $SNAP_ID > snapshot_id.txt
+      - name: Clean up older AMIs (keep 2 latest)
+        run: |
+          echo "Finding AMIs with name prefix: homelab-ami-*"
+
+          # Get all matching AMIs, sorted by creation date (oldest to newest)
+          aws ec2 describe-images \
+            --owners self \
+            --filters "Name=name,Values=homelab-ami-*" "Name=state,Values=available" \
+            --query "Images | sort_by(@, &CreationDate) | [].{ID:ImageId,Name:Name}" \
+            --output json > all_amis.json
+
+          total=$(jq length all_amis.json)
+
+          if [ "$total" -le 2 ]; then
+            echo "Only $total AMIs found — skipping cleanup."
+            exit 0
+          fi
+
+          # Delete all but the 2 latest
+          to_delete=$(jq -r ".[0:$(($total - 2))] | .[].ID" all_amis.json)
+
+          echo "Deleting AMIs:"
+          echo "$to_delete"
+
+          for ami_id in $to_delete; do
+            # Deregister the AMI
+            echo "Deregistering $ami_id"
+            aws ec2 deregister-image --image-id "$ami_id"
+
+            # Get associated snapshot(s)
+            snapshot_ids=$(aws ec2 describe-images --image-ids "$ami_id" \
+              --query "Images[].BlockDeviceMappings[].Ebs.SnapshotId" \
+              --output text)
+
+            for snap_id in $snapshot_ids; do
+              echo "Deleting snapshot $snap_id"
+              aws ec2 delete-snapshot --snapshot-id "$snap_id"
+            done
+          done
 
       - name: Upload artifact (ids)
         uses: actions/upload-artifact@v4
@@ -91,7 +121,6 @@ jobs:
           name: restore-ids
           path: |
             ami_id.txt
-            # snapshot_id.txt
 
       - name: Terraform Destroy
         working-directory: terraform
