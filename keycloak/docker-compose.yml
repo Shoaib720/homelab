@@ -4,8 +4,8 @@ networks:
     external: true
 
 services:
-  postgresql:
-    image: docker.io/bitnami/postgresql:11
+  keycloak_postgresql:
+    image: docker.io/bitnami/postgresql:17.5.0
     restart: unless-stopped
     environment:
       # ALLOW_EMPTY_PASSWORD is recommended only for development.
@@ -27,6 +27,7 @@ services:
     environment:
       - KEYCLOAK_ADMIN_USER=shoaib
       - KEYCLOAK_ADMIN_PASSWORD=Shoaib@123
+      - KEYCLOAK_DATABASE_HOST=keycloak_postgresql
       - KEYCLOAK_DATABASE_NAME=keycloak
       - KEYCLOAK_DATABASE_USER=keycloak
       - KEYCLOAK_DATABASE_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf

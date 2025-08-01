@@ -1,29 +1,33 @@
-version: '3.9'
+networks:
+  homelab_network:
+    name: homelab_network
+    external: true
+
 services:
-  postgresql:
-    image: docker.io/bitnami/postgresql:13
+  sonarqube_postgresql:
+    image: docker.io/bitnami/postgresql:17.5.0
     volumes:
       - 'postgresql_data:/bitnami/postgresql'
     environment:
       # ALLOW_EMPTY_PASSWORD is recommended only for development.
-      - ALLOW_EMPTY_PASSWORD=yes
-      - POSTGRESQL_USERNAME=bn_sonarqube
-      - POSTGRESQL_DATABASE=bitnami_sonarqube
+      - ALLOW_EMPTY_PASSWORD=no
+      - POSTGRESQL_USERNAME=sonarqube
+      - POSTGRESQL_PASSWORD=Q9Cjts96us87hVw1PC8dEWZuj
+      - POSTGRESQL_DATABASE=sonarqube
   sonarqube:
-    image: docker.io/bitnami/sonarqube:9
-    ports:
-      - '9090:9000'
+    image: docker.io/bitnami/sonarqube:25.7.0
     volumes:
       - 'sonarqube_data:/bitnami/sonarqube'
     depends_on:
       - postgresql
     environment:
       # ALLOW_EMPTY_PASSWORD is recommended only for development.
-      - ALLOW_EMPTY_PASSWORD=yes
-      - SONARQUBE_DATABASE_HOST=postgresql
+      - ALLOW_EMPTY_PASSWORD=no
+      - SONARQUBE_DATABASE_HOST=sonarqube_postgresql
       - SONARQUBE_DATABASE_PORT_NUMBER=5432
-      - SONARQUBE_DATABASE_USER=bn_sonarqube
-      - SONARQUBE_DATABASE_NAME=bitnami_sonarqube
+      - SONARQUBE_DATABASE_USER=sonarqube
+      - SONARQUBE_DATABASE_PASSWORD=Q9Cjts96us87hVw1PC8dEWZuj
+      - SONARQUBE_DATABASE_NAME=sonarqube
 volumes:
   postgresql_data:
     driver: local
