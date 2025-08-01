@@ -39,7 +39,7 @@ services:
       - KEYCLOAK_HTTPS_CERTIFICATE_FILE=/opt/bitnami/keycloak/certs/fullchain.pem
       - KEYCLOAK_HTTPS_CERTIFICATE_KEY_FILE=/opt/bitnami/keycloak/certs/private.key
     depends_on:
-      - postgresql
+      - keycloak_postgresql
     networks:
       - homelab_network
 

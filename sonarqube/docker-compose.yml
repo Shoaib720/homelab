@@ -19,7 +19,7 @@ services:
     volumes:
       - 'sonarqube_data:/bitnami/sonarqube'
     depends_on:
-      - postgresql
+      - sonarqube_postgresql
     environment:
       # ALLOW_EMPTY_PASSWORD is recommended only for development.
       - ALLOW_EMPTY_PASSWORD=no
