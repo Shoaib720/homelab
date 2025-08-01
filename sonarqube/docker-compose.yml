@@ -14,6 +14,8 @@ services:
       - POSTGRESQL_USERNAME=sonarqube
       - POSTGRESQL_PASSWORD=Q9Cjts96us87hVw1PC8dEWZuj
       - POSTGRESQL_DATABASE=sonarqube
+    networks:
+      - homelab_network
   sonarqube:
     image: docker.io/bitnami/sonarqube:25.7.0
     volumes:
@@ -28,6 +30,8 @@ services:
       - SONARQUBE_DATABASE_USER=sonarqube
       - SONARQUBE_DATABASE_PASSWORD=Q9Cjts96us87hVw1PC8dEWZuj
       - SONARQUBE_DATABASE_NAME=sonarqube
+    networks:
+      - homelab_network
 volumes:
   postgresql_data:
     driver: local
