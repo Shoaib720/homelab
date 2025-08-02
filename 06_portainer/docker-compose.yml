@@ -7,7 +7,6 @@ services:
   portainer:
     image: portainer/portainer-ce:2.32.0-alpine
     restart: unless-stopped
-    command: -H unix:///var/run/docker.sock
     environment:
       - VIRTUAL_HOST=portainer.yourdomain.com
     volumes:
