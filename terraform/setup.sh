@@ -32,6 +32,8 @@ if [ ! -d "docker-compose/.git" ]; then
 else
   echo "Repo already exists. Pulling latest changes..."
   cd docker-compose
+  git reset --hard HEAD
+  git clean -fd
   git pull
 fi
 
