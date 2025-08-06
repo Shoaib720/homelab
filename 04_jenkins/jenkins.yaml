@@ -16,7 +16,7 @@ jenkins:
     globalMatrix:
       permissions:
         - "Overall/Administer:jenkins-admin"
-        - "Overall/Read:jenkins-readonly"
+        - "Overall/Read:jenkins-reader"
         - "Job/Build:jenkins-admin"
         - "Job/Configure:jenkins-admin"
-        - "Job/Discover:jenkins-readonly"
+        - "Job/Discover:jenkins-reader"
