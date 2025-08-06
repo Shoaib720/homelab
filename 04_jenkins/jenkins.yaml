@@ -4,7 +4,8 @@ jenkins:
       clientId: "jenkins"
       clientSecret: "${OIDC_CLIENT_SECRET}"
       serverConfiguration:
-        wellKnownOpenIDConfigurationUrl: "https://keycloak.deploywizard.in/realms/HomeLab/.well-known/openid-configuration"
+        wellKnown:
+          wellKnownOpenIDConfigurationUrl: "https://keycloak.deploywizard.in/realms/HomeLab/.well-known/openid-configuration"
       emailFieldName: "email"
       userNameField: "preferred_username"
       logoutFromOpenidProvider: true
