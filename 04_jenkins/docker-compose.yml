@@ -5,15 +5,16 @@ networks:
 
 services:
   jenkins:
-    image: jenkins/jenkins:2.521-jdk21
+    # image: jenkins/jenkins:2.521-jdk21
     environment:
+      - PLUGINS_FORCE_UPGRADE=true
       - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
       - OIDC_CLIENT_SECRET=OGIlxuZZkRhagiGytCCHvMXfwTnHT9iW
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     # restart: unless-stopped
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
     # ports:
     #   - '8080:8080'
     #   - '50000:50000'
