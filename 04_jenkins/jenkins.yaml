@@ -1,0 +1,17 @@
+jenkins:
+  securityRealm:
+    oic:
+      clientId: "jenkins"
+      clientSecret: "${OIDC_CLIENT_SECRET}"
+      tokenServerUrl: "https://keycloak.deploywizard.in/realms/homelab/protocol/openid-connect/token"
+      authorizationServerUrl: "https://keycloak.deploywizard.in/realms/homelab/protocol/openid-connect/auth"
+      userInfoServerUrl: "https://keycloak.deploywizard.in/realms/homelab/protocol/openid-connect/userinfo"
+      logoutUrl: "https://keycloak.deploywizard.in/realms/homelab/protocol/openid-connect/logout"
+      scopes: "openid email profile"
+      usernameField: "preferred_username"
+      emailFieldName: "email"
+      disableSignup: true
+      enableIdToken: true
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
