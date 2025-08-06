@@ -6,6 +6,7 @@ jenkins:
       serverConfiguration:
         wellKnown:
           wellKnownOpenIDConfigurationUrl: "https://keycloak.deploywizard.in/realms/HomeLab/.well-known/openid-configuration"
+          scopesOverride: "openid profile email"
       emailFieldName: "email"
       userNameField: "preferred_username"
       logoutFromOpenidProvider: true
