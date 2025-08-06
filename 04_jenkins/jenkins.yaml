@@ -6,11 +6,17 @@ jenkins:
       serverConfiguration:
         wellKnown:
           wellKnownOpenIDConfigurationUrl: "https://keycloak.deploywizard.in/realms/HomeLab/.well-known/openid-configuration"
-          scopesOverride: "openid profile email"
+          scopesOverride: "openid profile email jenkins"
       emailFieldName: "email"
+      groupsFieldName: "roles"
       userNameField: "preferred_username"
       logoutFromOpenidProvider: true
       disableSslVerification: true   # only if using HTTP in homelab
   authorizationStrategy:
-    loggedInUsersCanDoAnything:
-      allowAnonymousRead: false
+    globalMatrix:
+      permissions:
+        - "Overall/Administer:jenkins-admin"
+        - "Overall/Read:jenkins-readonly"
+        - "Job/Build:jenkins-admin"
+        - "Job/Configure:jenkins-admin"
+        - "Job/Discover:jenkins-readonly"
