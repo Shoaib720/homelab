@@ -9,6 +9,7 @@ services:
     environment:
       - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
       - OIDC_CLIENT_SECRET=OGIlxuZZkRhagiGytCCHvMXfwTnHT9iW
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     # restart: unless-stopped
     # build:
     #   context: .
