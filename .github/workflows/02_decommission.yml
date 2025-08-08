@@ -67,12 +67,14 @@ jobs:
           echo $AMI_ID > ami_id.txt
 
       - name: Wait for AMI to be available
+        if: ${{ github.event.inputs.make_ami == 'true' }}
         run: |
           echo "Waiting for AMI $AMI_ID to become available..."
           aws ec2 wait image-available --image-ids $AMI_ID
           echo "AMI $AMI_ID created."
 
       - name: Clean up older AMIs (keep 2 latest)
+        if: ${{ github.event.inputs.make_ami == 'true' }}
         run: |
           echo "Finding AMIs with name prefix: homelab-ami-*"
 
@@ -113,6 +115,7 @@ jobs:
           done
 
       - name: Upload artifact (ids)
+        if: ${{ github.event.inputs.make_ami == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: restore-ids
