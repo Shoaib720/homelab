@@ -8,9 +8,6 @@ log()  { echo -e "\033[1;32m[PROVISION]\033[0m $*"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m       $*"; }
 err()  { echo -e "\033[1;31m[ERROR]\033[0m      $*"; }
 
-# Optional: project name so all resources get a predictable prefix
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-homelab}"
-
 # ---------------------------
 # Preconditions
 # ---------------------------
@@ -61,7 +58,7 @@ up_compose() {
     cd "$dir"
     # Pull latest images (safe/idempotent), prune orphans, and detach
     docker compose -f "$(basename "$yml")" pull --quiet || true
-    docker compose -f "$(basename "$yml")" up -d --remove-orphans
+    docker compose -f "$(basename "$yml")" up -d
   )
 }
 
