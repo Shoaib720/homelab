@@ -1,0 +1,24 @@
+networks:
+  homelab_network:
+    name: homelab_network
+    external: true
+
+services:
+  vault:
+    image: hashicorp/vault:1.15
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    command: vault server -config=/vault/config/vault.hcl
+    # ports:
+    #   - "8200:8200"   # Only accessible locally, Nginx will proxy
+    volumes:
+      - ./vault/config:/vault/config
+      - ./vault/data:/vault/data
+    networks:
+      - homelab_network
+
+volumes:
+  vault_postgres_data:

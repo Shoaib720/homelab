@@ -54,6 +54,13 @@ resource "aws_instance" "lab_server" {
     Name = "DevOps Lab"
   }
 
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"         # IMDSv2
+    http_put_response_hop_limit = 2                  # <- IMPORTANT
+    instance_metadata_tags      = "enabled"
+  }
+
   provisioner "file" {
     source      = "~/.ssh/personal_github_rsa"
     destination = "/home/ubuntu/.ssh/id_rsa"
