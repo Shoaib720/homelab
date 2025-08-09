@@ -1,7 +1,7 @@
 resource "aws_key_pair" "lab_key" {
   key_name   = "lab-key"
   public_key = file("~/.ssh/lab-kp.pub")
-#   public_key = file("${path.module}/lab-kp.pub")
+  #   public_key = file("${path.module}/lab-kp.pub")
 }
 
 resource "aws_security_group" "allow_ssh" {
@@ -45,10 +45,10 @@ resource "aws_security_group" "allow_ssh" {
 }
 
 resource "aws_instance" "lab_server" {
-  ami                         = data.aws_ami.latest_homelab.id
-  instance_type               = "m6i.2xlarge"  # older: "m6i.xlarge"
-  key_name                    = aws_key_pair.lab_key.key_name
-  security_groups        = [aws_security_group.allow_ssh.name]
+  ami             = data.aws_ami.latest_homelab.id
+  instance_type   = "m6i.2xlarge" # older: "m6i.xlarge"
+  key_name        = aws_key_pair.lab_key.key_name
+  security_groups = [aws_security_group.allow_ssh.name]
 
   tags = {
     Name = "DevOps Lab"

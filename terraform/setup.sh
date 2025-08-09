@@ -26,12 +26,12 @@ sudo usermod -aG docker ${USER}
 mkdir -p ~/projects
 cd ~/projects
 
-if [ ! -d "docker-compose/.git" ]; then
+if [ ! -d "homelab/.git" ]; then
   echo "Cloning repo..."
-  git clone git@github.com:Shoaib720/docker-compose.git
+  git clone git@github.com:Shoaib720/homelab.git
 else
   echo "Repo already exists. Pulling latest changes..."
-  cd docker-compose
+  cd homelab
   git reset --hard HEAD
   git clean -fd
   git pull
