@@ -1,0 +1,48 @@
+networks:
+  homelab_network:
+    name: homelab_network
+    external: true
+
+services:
+  keycloak_postgresql:
+    image: docker.io/bitnami/postgresql:17.5.0
+    restart: unless-stopped
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=no
+      - POSTGRESQL_USERNAME=keycloak
+      - POSTGRESQL_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
+      - POSTGRESQL_DATABASE=keycloak
+    volumes:
+      - 'postgresql_data:/bitnami/postgresql'
+    networks:
+      - homelab_network
+
+  keycloak:
+    image: docker.io/bitnami/keycloak:26.3.2
+    #image: jboss/keycloak:14.0.0
+    restart: unless-stopped
+    volumes:
+      - './certs:/opt/bitnami/keycloak/certs:ro'
+    environment:
+      - KEYCLOAK_ADMIN_USER=shoaib
+      - KEYCLOAK_ADMIN_PASSWORD=Shoaib@123
+      - KEYCLOAK_DATABASE_HOST=keycloak_postgresql
+      - KEYCLOAK_DATABASE_NAME=keycloak
+      - KEYCLOAK_DATABASE_USER=keycloak
+      - KEYCLOAK_DATABASE_PASSWORD=o22Cve0sIurpZvdP3u2SC0wjVflITf
+      - KC_HOSTNAME=keycloak.deploywizard.in
+      - KEYCLOAK_PROXY_HEADERS=xforwarded
+      - KC_PROXY=edge
+      - KEYCLOAK_ENABLE_HTTPS=false
+      - KEYCLOAK_HTTPS_USE_PEM=true
+      - KEYCLOAK_HTTPS_CERTIFICATE_FILE=/opt/bitnami/keycloak/certs/fullchain.pem
+      - KEYCLOAK_HTTPS_CERTIFICATE_KEY_FILE=/opt/bitnami/keycloak/certs/private.key
+    depends_on:
+      - keycloak_postgresql
+    networks:
+      - homelab_network
+
+volumes:
+  postgresql_data:
+    driver: local
