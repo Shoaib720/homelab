@@ -13,3 +13,7 @@ data "aws_ami" "latest_homelab" {
     values = ["available"]
   }
 }
+
+data "aws_kms_key" "vault_kms_key" {
+  key_id = "alias/vault-unseal"
+}

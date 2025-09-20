@@ -11,9 +11,11 @@ services:
       - IPC_LOCK
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     command: vault server -config=/vault/config/vault.hcl
-    # ports:
-    #   - "8200:8200"   # Only accessible locally, Nginx will proxy
+    ports:
+      - "8200:8200"   # Only accessible locally, Nginx will proxy
     volumes:
       - ./vault/config:/vault/config
       - ./vault/data:/vault/data

@@ -53,3 +53,4 @@ terraform.rc
 **/vault/data/*
 !**/.gitkeep
 **/.env
+secrets/*

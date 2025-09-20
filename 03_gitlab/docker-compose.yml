@@ -16,6 +16,12 @@ services:
       - 'gitlab_configs:/etc/gitlab'
       - 'gitlab_logs:/var/log/gitlab'
       - 'gitlab_data:/var/opt/gitlab'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitlab.rule=Host(`gitlab.deploywizard.local`)"
+      - "traefik.http.routers.gitlab.entrypoints=websecure"
+      - "traefik.http.routers.gitlab.tls=true"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
     shm_size: '512m'
     networks:
       - homelab_network

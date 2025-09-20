@@ -1,0 +1,35 @@
+networks:
+  homelab_network:
+    name: homelab_network
+    external: true
+
+services:
+  postgres:
+    image: postgres:17.6
+    container_name: homelab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${PG_ADMIN_PASSWORD:-P@ssw0rd}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_scripts:/docker-entrypoint-initdb.d
+    networks:
+      - homelab_network
+  adminer:
+    image: adminer:5.3.0
+    restart: unless-stopped
+    # ports:
+    #   - "8080:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.deploywizard.local`)"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls=true"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+    networks:
+      - homelab_network
+
+volumes:
+  postgres_data:
+    driver: local

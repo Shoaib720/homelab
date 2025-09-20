@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /certs/fullchain.crt
+      keyFile:  /certs/private.key

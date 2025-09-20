@@ -13,5 +13,5 @@ storage "file" {
 
 seal "awskms" {
   region     = "ap-south-1"
-  kms_key_id = "alias/vault-auto-unseal"
+  kms_key_id = "alias/vault-unseal"
 }

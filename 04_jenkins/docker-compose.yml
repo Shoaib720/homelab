@@ -8,9 +8,9 @@ services:
     # image: jenkins/jenkins:2.521-jdk21
     environment:
       - PLUGINS_FORCE_UPGRADE=true
-      - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
-      - OIDC_CLIENT_SECRET=OGIlxuZZkRhagiGytCCHvMXfwTnHT9iW
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      # - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
+      # - OIDC_CLIENT_SECRET=OGIlxuZZkRhagiGytCCHvMXfwTnHT9iW
+      # - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     # restart: unless-stopped
     build:
       context: .
@@ -22,10 +22,16 @@ services:
       - homelab_network
     volumes:
       - 'jenkins_home:/var/jenkins_home'
-      - ./jenkins.yaml:/var/jenkins_home/casc_configs/jenkins.yaml
+      # - ./jenkins.yaml:/var/jenkins_home/casc_configs/jenkins.yaml
       # - '/var/run/docker.sock:/var/run/docker.sock'
     # group_add:
     #   - '997'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jenkins.rule=Host(`jenkins.deploywizard.local`)"
+      - "traefik.http.routers.jenkins.entrypoints=websecure"
+      - "traefik.http.routers.jenkins.tls=true"
+      - "traefik.http.services.jenkins.loadbalancer.server.port=8080"
     
 volumes:
   jenkins_home:
