@@ -1,18 +1,21 @@
-name: Provision Homelab
+name: Provision Homelab EKS
+
 on:
   workflow_dispatch:
 
 jobs:
-  provision:
-    name: Provision Server
+  infrastructure:
+    name: Provision Infrastructure with Terragrunt
     runs-on: ubuntu-latest
     environment: DEV
+
     env:
       AWS_REGION: ap-south-1
-    outputs:
-      vm_ip: ${{ steps.output-ip.outputs.vm_ip }}
+      TG_WORKDIR: ./infra/envs/nonprod   # adjust to your terragrunt.hcl path
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -21,119 +24,79 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Configure SSH Key Pair
+      - name: Install Terraform & Terragrunt
         run: |
-          mkdir ~/.ssh
-          echo "${{ secrets.LAB_SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/lab-kp
-          chmod 600 ~/.ssh/lab-kp
-          echo "${{ secrets.LAB_SERVER_SSH_PUBLIC_KEY }}" > ~/.ssh/lab-kp.pub
-          ls -al ~/.ssh
+          curl -Lo /usr/local/bin/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.66.4/terragrunt_linux_amd64
+          chmod +x /usr/local/bin/terragrunt
+          terragrunt --version
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.12.2
+      - name: Terragrunt Init - VPC
+        run: terragrunt init
+        working-directory: ${{ env.TG_WORKDIR }}/vpc
 
-      - name: Write GitHub Keys to File
-        run: |
-          echo "${{ secrets.PERSONAL_GITHUB_RSA_PRIVATE }}" > ~/.ssh/personal_github_rsa
-          chmod 600 ~/.ssh/personal_github_rsa
-          ls -al ~/.ssh
+      - name: Terragrunt Plan - VPC
+        run: terragrunt plan -out=tfplan
+        working-directory: ${{ env.TG_WORKDIR }}/vpc
 
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
+      - name: Terragrunt Apply - VPC
+        run: terragrunt apply -auto-approve tfplan
+        working-directory: ${{ env.TG_WORKDIR }}/vpc
 
-      - name: Terraform Plan
-        working-directory: terraform
-        run: terraform plan -out=tfplan
+      # - name: Terragrunt Init - EKS
+      #   run: terragrunt init
+      #   working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      - name: Terraform Apply
-        working-directory: terraform
-        run: terraform apply -auto-approve tfplan
+      # - name: Terragrunt Plan - EKS
+      #   run: terragrunt plan -out=tfplan
+      #   working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      - name: Output EC2 Public IP
-        working-directory: terraform
-        id: output-ip
-        run: |
-          echo "vm_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
+      # - name: Terragrunt Apply - EKS
+      #   run: terragrunt apply -auto-approve tfplan
+      #   working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      - name: Cleanup
-        run: |
-          rm -f ~/.ssh/lab-kp* ~/.ssh/personal_github_rsa
+      # - name: Export Kubeconfig
+      #   run: |
+      #     CLUSTER_NAME=$(terragrunt output -raw cluster_name)
+      #     aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      #     mkdir -p ~/.kube
+      #     cp ~/.kube/config kubeconfig
+      #   working-directory: ${{ env.TG_WORKDIR }}/eks
 
-  update_dns:
-    name: Update DNS
-    environment: DEV
-    runs-on: ubuntu-latest
-    needs: provision
-    steps:
-      - name: Update Cloudflare DNS A record if needed
-        env:
-          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          ZONE_NAME: ${{ vars.CLOUDFLARE_ZONE_NAME }}
-          RECORD_NAME: "*.${{ vars.CLOUDFLARE_ZONE_NAME }}"
-          NEW_IP: ${{ needs.provision.outputs.vm_ip }}
-        run: |
-          echo "Checking Cloudflare DNS for $RECORD_NAME"
+      # - name: Upload kubeconfig artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: kubeconfig
+      #     path: ${{ env.TG_WORKDIR }}/eks/kubeconfig
+      #     retention-days: 1
 
-          ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=$ZONE_NAME" \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            -H "Content-Type: application/json" | jq -r '.result[0].id')
+  # addons:
+  #   name: Deploy Add-ons
+  #   runs-on: ubuntu-latest
+  #   needs: infrastructure
 
-          RECORD_INFO=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=A&name=$RECORD_NAME" \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            -H "Content-Type: application/json")
+  #   steps:
+  #     - name: Download kubeconfig
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: kubeconfig
+  #         path: ~/.kube
 
-          RECORD_ID=$(echo "$RECORD_INFO" | jq -r '.result[0].id')
-          CURRENT_IP=$(echo "$RECORD_INFO" | jq -r '.result[0].content')
+  #     - name: Setup kubectl
+  #       uses: azure/setup-kubectl@v4
+  #       with:
+  #         version: v1.30.0
 
-          echo "Current IP: $CURRENT_IP"
-          echo "New IP: $NEW_IP"
+  #     - name: Setup Helm
+  #       uses: azure/setup-helm@v4
+  #       with:
+  #         version: v3.15.4
 
-          if [ "$CURRENT_IP" = "$NEW_IP" ]; then
-            echo "DNS record already up-to-date. Skipping update."
-          else
-            echo "Updating Cloudflare DNS: $RECORD_NAME → $NEW_IP"
+  #     - name: Verify cluster access
+  #       run: kubectl get nodes
 
-            curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RECORD_ID" \
-              -H "Authorization: Bearer $CF_API_TOKEN" \
-              -H "Content-Type: application/json" \
-              --data '{
-                "type": "A",
-                "name": "'"$RECORD_NAME"'",
-                "content": "'"$NEW_IP"'",
-                "ttl": 60,
-                "proxied": false
-              }'
-
-            echo "DNS updated."
-          fi
-
-  configure:
-    name: Configure Server
-    environment:
-      name: DEV
-      url: 'https://homelab.deploywizard.in'
-    runs-on: ubuntu-latest
-    needs: [provision,update_dns]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Configure SSH Key Pair
-        run: |
-          mkdir ~/.ssh
-          echo "${{ secrets.LAB_SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/lab-kp
-          chmod 600 ~/.ssh/lab-kp
-          echo "${{ secrets.LAB_SERVER_SSH_PUBLIC_KEY }}" > ~/.ssh/lab-kp.pub
-          ls -al ~/.ssh
-
-      - name: Copy deploy script to server
-        run: |
-          scp -i ~/.ssh/lab-kp -o StrictHostKeyChecking=no terraform/setup.sh ubuntu@${{ needs.provision.outputs.vm_ip }}:/home/ubuntu/setup.sh
-
-      - name: SSH and run deploy
-        run: |
-          ssh -i ~/.ssh/lab-kp -o StrictHostKeyChecking=no ubuntu@${{ needs.provision.outputs.vm_ip }} \
-          "bash /home/ubuntu/setup.sh"
+  #     - name: Deploy Traefik (example)
+  #       run: |
+  #         helm repo add traefik https://traefik.github.io/charts
+  #         helm repo update
+  #         helm upgrade --install traefik traefik/traefik \
+  #           --namespace kube-system
