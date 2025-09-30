@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "arn:aws:kms:ap-south-1:970547335250:key/24605976-881b-4f02-a2cb-586c5263d804"
+    }
+  ]
+}
