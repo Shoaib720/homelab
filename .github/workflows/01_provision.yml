@@ -43,39 +43,39 @@ jobs:
         working-directory: ${{ env.TG_WORKDIR }}/vpc
 
       - name: Terragrunt Plan - VPC
-        run: terragrunt plan -out=tfplan
+        run: terragrunt plan -out=vpc.tfplan
         working-directory: ${{ env.TG_WORKDIR }}/vpc
 
       - name: Terragrunt Apply - VPC
-        run: terragrunt apply -auto-approve tfplan
+        run: terragrunt apply -auto-approve vpc.tfplan
         working-directory: ${{ env.TG_WORKDIR }}/vpc
 
-      # - name: Terragrunt Init - EKS
-      #   run: terragrunt init
-      #   working-directory: ${{ env.TG_WORKDIR }}/eks
+      - name: Terragrunt Init - EKS
+        run: terragrunt init --terragrunt-disable-bucket-update
+        working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      # - name: Terragrunt Plan - EKS
-      #   run: terragrunt plan -out=tfplan
-      #   working-directory: ${{ env.TG_WORKDIR }}/eks
+      - name: Terragrunt Plan - EKS
+        run: terragrunt plan -out=eks.tfplan
+        working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      # - name: Terragrunt Apply - EKS
-      #   run: terragrunt apply -auto-approve tfplan
-      #   working-directory: ${{ env.TG_WORKDIR }}/eks
+      - name: Terragrunt Apply - EKS
+        run: terragrunt apply -auto-approve eks.tfplan
+        working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      # - name: Export Kubeconfig
-      #   run: |
-      #     CLUSTER_NAME=$(terragrunt output -raw cluster_name)
-      #     aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-      #     mkdir -p ~/.kube
-      #     cp ~/.kube/config kubeconfig
-      #   working-directory: ${{ env.TG_WORKDIR }}/eks
+      - name: Export Kubeconfig
+        run: |
+          CLUSTER_NAME=$(terragrunt output -raw cluster_name)
+          aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+          mkdir -p ~/.kube
+          cp ~/.kube/config kubeconfig
+        working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      # - name: Upload kubeconfig artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: kubeconfig
-      #     path: ${{ env.TG_WORKDIR }}/eks/kubeconfig
-      #     retention-days: 1
+      - name: Upload kubeconfig artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubeconfig
+          path: ${{ env.TG_WORKDIR }}/eks/kubeconfig
+          retention-days: 3
 
   # addons:
   #   name: Deploy Add-ons
