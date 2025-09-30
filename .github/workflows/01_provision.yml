@@ -5,7 +5,7 @@ on:
 
 jobs:
   infrastructure:
-    name: Provision Infrastructure with Terragrunt
+    name: Provision
     runs-on: ubuntu-latest
     environment: DEV
 
