@@ -39,7 +39,7 @@ jobs:
           terragrunt --version
 
       - name: Terragrunt Init - VPC
-        run: terragrunt init
+        run: terragrunt init --terragrunt-disable-bucket-update
         working-directory: ${{ env.TG_WORKDIR }}/vpc
 
       - name: Terragrunt Plan - VPC
