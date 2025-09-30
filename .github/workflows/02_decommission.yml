@@ -1,21 +1,24 @@
-name: Decommission Homelab
+name: Decommision Homelab EKS
+
 on:
   workflow_dispatch:
-    inputs:
-      make_ami:
-        type: boolean
-        description: Create AMI
-        default: true
+  push:
+    branches:
+      - feature/provision-github-action
 
 jobs:
-  destroy:
-    name: Decommission Server
+  infrastructure:
+    name: Decommission
     runs-on: ubuntu-latest
     environment: DEV
+
     env:
       AWS_REGION: ap-south-1
+      TG_WORKDIR: ./infra/envs/nonprod   # adjust to your terragrunt.hcl path
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -24,108 +27,29 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Configure SSH Key Pair
-        run: |
-          mkdir ~/.ssh
-          echo "${{ secrets.LAB_SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/lab-kp
-          chmod 600 ~/.ssh/lab-kp
-          echo "${{ secrets.LAB_SERVER_SSH_PUBLIC_KEY }}" > ~/.ssh/lab-kp.pub
-          ls -al ~/.ssh
-
-      - name: Write GitHub Keys to File
-        run: |
-          echo "${{ secrets.PERSONAL_GITHUB_RSA_PRIVATE }}" > ~/.ssh/personal_github_rsa
-          chmod 600 ~/.ssh/personal_github_rsa
-          ls -al ~/.ssh
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.2
+          terraform_version: 1.13.3
 
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
-
-      - name: Output values
-        id: tfout
-        working-directory: terraform
+      - name: Install Terragrunt
         run: |
-          terraform output -json > outputs.json
-          echo "INSTANCE_ID=$(jq -r .instance_id.value outputs.json)" >> $GITHUB_ENV
-          # echo "DATA_VOL_ID=$(jq -r .data_volume_id.value outputs.json)" >> $GITHUB_ENV
+          curl -Lo /usr/local/bin/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.66.4/terragrunt_linux_amd64
+          chmod +x /usr/local/bin/terragrunt
+          terragrunt --version
 
-      - name: Create AMI
-        if: ${{ github.event.inputs.make_ami == 'true' }}
-        run: |
-          AMI_ID=$(aws ec2 create-image \
-            --instance-id "$INSTANCE_ID" \
-            --name "homelab-ami-$(date +%Y%m%d%H%M%S)" \
-            --no-reboot \
-            --query 'ImageId' --output text)
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
-          echo $AMI_ID > ami_id.txt
+      - name: Terragrunt Init - EKS
+        run: terragrunt init --terragrunt-disable-bucket-update
+        working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      - name: Wait for AMI to be available
-        if: ${{ github.event.inputs.make_ami == 'true' }}
-        run: |
-          echo "Waiting for AMI $AMI_ID to become available..."
-          aws ec2 wait image-available --image-ids $AMI_ID
-          echo "AMI $AMI_ID created."
+      - name: Terragrunt Destroy - EKS
+        run: terragrunt destroy -auto-approve
+        working-directory: ${{ env.TG_WORKDIR }}/eks
 
-      - name: Clean up older AMIs (keep 2 latest)
-        if: ${{ github.event.inputs.make_ami == 'true' }}
-        run: |
-          echo "Finding AMIs with name prefix: homelab-ami-*"
+      - name: Terragrunt Init - VPC
+        run: terragrunt init --terragrunt-disable-bucket-update
+        working-directory: ${{ env.TG_WORKDIR }}/vpc
 
-          # Get all matching AMIs, sorted by creation date (oldest to newest)
-          aws ec2 describe-images \
-            --owners self \
-            --filters "Name=name,Values=homelab-ami-*" "Name=state,Values=available" \
-            --query "Images | sort_by(@, &CreationDate) | [].{ID:ImageId,Name:Name}" \
-            --output json > all_amis.json
-
-          total=$(jq length all_amis.json)
-
-          if [ "$total" -le 2 ]; then
-            echo "Only $total AMIs found — skipping cleanup."
-            exit 0
-          fi
-
-          # Delete all but the 2 latest
-          to_delete=$(jq -r ".[0:$(($total - 2))] | .[].ID" all_amis.json)
-
-          echo "Deleting AMIs:"
-          echo "$to_delete"
-
-          for ami_id in $to_delete; do
-            # Deregister the AMI
-            echo "Deregistering $ami_id"
-            aws ec2 deregister-image --image-id "$ami_id"
-
-            # Get associated snapshot(s)
-            snapshot_ids=$(aws ec2 describe-images --image-ids "$ami_id" \
-              --query "Images[].BlockDeviceMappings[].Ebs.SnapshotId" \
-              --output text)
-
-            for snap_id in $snapshot_ids; do
-              echo "Deleting snapshot $snap_id"
-              aws ec2 delete-snapshot --snapshot-id "$snap_id"
-            done
-          done
-
-      - name: Upload artifact (ids)
-        if: ${{ github.event.inputs.make_ami == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: restore-ids
-          path: |
-            ami_id.txt
-
-      - name: Terraform Destroy
-        working-directory: terraform
-        run: terraform destroy -auto-approve
-
-      - name: Cleanup
-        run: |
-          rm -f ~/.ssh/lab-kp* ~/.ssh/personal_github_rsa
+      - name: Terragrunt Destroy - VPC
+        run: terragrunt destroy -auto-approve
+        working-directory: ${{ env.TG_WORKDIR }}/vpc
