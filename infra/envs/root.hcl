@@ -8,26 +8,23 @@ remote_state {
     use_lockfile = true
   }
 }
-
-# Provider config (shared everywhere)
 generate "provider" {
-  path      = "provider.tf"
+  path      = "provider.generated.tf"
   if_exists = "overwrite_terragrunt"
   contents  = <<EOF
-provider "aws" {
-  region  = "ap-south-1"
-}
+  terraform {
+    required_version = ">= 1.5.0"
+  }
+  provider "aws" {
+    region = "ap-south-1"
+  }
 EOF
 }
 
-# Common inputs (tags, naming, etc.)
 locals {
-  common_tags = {
-    Owner       = "shoaib"
-    Environment = basename(dirname(path_relative_to_include()))
+  # Only base (environment-agnostic) values here.
+  base_tags = {
+    Owner = "shoaib"
+    Project = "homelab"
   }
-}
-
-inputs = {
-  tags = local.common_tags
 }

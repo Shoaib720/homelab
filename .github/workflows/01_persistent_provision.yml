@@ -1,0 +1,31 @@
+name: Provision - Persistent Resources
+
+on:
+  workflow_dispatch:
+
+jobs:
+  security_scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    environment: DEV
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run tfsec (JSON + SARIF outputs)
+        run: |
+          tfsec --version
+          tfsec --force-all-dirs infra/envs --format json > tfsec-results.json
+          tfsec --force-all-dirs infra/envs --format sarif > tfsec-results.sarif
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: tfsec-results.sarif
+
+      - name: Upload JSON as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfsec-json-results
+          path: tfsec-results.json
