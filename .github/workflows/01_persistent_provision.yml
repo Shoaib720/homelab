@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  security_scan:
+  scan:
     name: Security Scan
     runs-on: ubuntu-latest
     environment: DEV
@@ -27,16 +27,50 @@ jobs:
           full_repo_scan: true
           sarif_file: tfsec-results.sarif
 
-      # - name: tfsec
-      #   uses: aquasecurity/tfsec-action@v1.0.3
-      #   with:
-      #     soft_fail: true
-      #     format: sarif
-      #     github_token: ${{ github.token }}
-      #     working_directory: ${{ env.TF_WORKDIR }}
-      #     additional_args: --force-all-dirs --out tfsec-results.sarif
-
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: tfsec-results.sarif
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    environment: DEV
+    env:
+      AWS_REGION: ap-south-1
+      TF_WORKDIR: ./infra/envs/nonprod/persistent
+    needs: scan
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+
+      - name: Install Terragrunt
+        run: |
+          curl -Lo /usr/local/bin/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.66.4/terragrunt_linux_amd64
+          chmod +x /usr/local/bin/terragrunt
+          terragrunt --version
+
+      - name: Terragrunt Init
+        run: terragrunt init --terragrunt-disable-bucket-update
+        working-directory: ${{ env.TF_WORKDIR }}
+
+      - name: Terragrunt Plan
+        run: terragrunt plan -out=persistent.tfplan
+        working-directory: ${{ env.TF_WORKDIR }}
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: ${{ env.TF_WORKDIR }}/persistent.tfplan
