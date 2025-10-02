@@ -64,7 +64,12 @@ jobs:
           terragrunt --version
 
       - name: Terragrunt Plan
-        run: terragrunt plan -out=persistent.tfplan --all --working-dir ${{ env.TF_WORKDIR }}
+        run: |
+          pwd
+          terragrunt plan -out=persistent.tfplan --all --working-dir ${{ env.TF_WORKDIR }}
+          pwd
+          ls -la
+
 
       - name: Upload plan
         uses: actions/upload-artifact@v4
