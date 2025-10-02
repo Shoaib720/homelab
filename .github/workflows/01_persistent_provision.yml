@@ -1,4 +1,4 @@
-name: Provision - Persistent Resources
+name: Nonprod - persistent provisioner
 
 on:
   workflow_dispatch:
@@ -8,28 +8,20 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     environment: DEV
-
+    env:
+      TF_WORKDIR: ./infra/envs/nonprod/persistent
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install tfsec
-        run: |
-          curl -sSL https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install.sh | bash
-
-      - name: Run tfsec (JSON + SARIF outputs)
-        run: |
-          tfsec --version
-          tfsec --force-all-dirs infra/envs --format json > tfsec-results.json
-          tfsec --force-all-dirs infra/envs --format sarif > tfsec-results.sarif
+      - name: tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          soft_fail: true
+          format: sarif
+          additional_args: --force-all-dirs ${{ env.TF_WORKDIR }} --out tfsec-results.sarif
 
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: tfsec-results.sarif
-
-      - name: Upload JSON as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfsec-json-results
-          path: tfsec-results.json
