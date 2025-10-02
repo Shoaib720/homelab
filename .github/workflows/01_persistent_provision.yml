@@ -63,14 +63,8 @@ jobs:
           chmod +x /usr/local/bin/terragrunt
           terragrunt --version
 
-      # - name: Terragrunt Init
-      #   # run: terragrunt init --terragrunt-disable-bucket-update
-      #   run: terragrunt init --all --working-dir ${{ env.TF_WORKDIR }}
-
       - name: Terragrunt Plan
-        run: |
-          terragrunt list --working-dir ./infra/envs/nonprod/persistent --dependencies
-          terragrunt plan -out=persistent.tfplan --all --working-dir ${{ env.TF_WORKDIR }}
+        run: terragrunt plan -out=${{ env.TF_WORKDIR }}/persistent.tfplan --all --working-dir ${{ env.TF_WORKDIR }}
 
       - name: Upload plan
         uses: actions/upload-artifact@v4
