@@ -61,12 +61,13 @@ jobs:
           chmod +x /usr/local/bin/terragrunt
           terragrunt --version
 
-      # - name: Terragrunt Init
-      #   run: terragrunt init --terragrunt-disable-bucket-update
-      #   working-directory: ${{ env.TF_WORKDIR }}
+      - name: Terragrunt Init
+        # run: terragrunt init --terragrunt-disable-bucket-update
+        run: terragrunt init --all
+        working-directory: ${{ env.TF_WORKDIR }}
 
       - name: Terragrunt Plan
-        run: terragrunt plan -out=persistent.tfplan
+        run: terragrunt plan -out=persistent.tfplan --all
         working-directory: ${{ env.TF_WORKDIR }}
 
       - name: Upload plan
