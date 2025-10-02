@@ -19,7 +19,8 @@ jobs:
         with:
           soft_fail: true
           format: sarif
-          additional_args: --force-all-dirs ${{ env.TF_WORKDIR }} --out tfsec-results.sarif
+          working_directory: ${{ env.TF_WORKDIR }}
+          additional_args: --force-all-dirs --out tfsec-results.sarif
 
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
