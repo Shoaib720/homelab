@@ -48,5 +48,5 @@ jobs:
         working-directory: ${{ env.TG_WORKDIR }}/vpc
 
       - name: Terragrunt Destroy - VPC
-        run: terragrunt destroy -auto-approve
+        run: terragrunt destroy -auto-approve -non-interactive -terragrunt-ignore-dependency-errors
         working-directory: ${{ env.TG_WORKDIR }}/vpc
