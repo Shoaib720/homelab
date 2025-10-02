@@ -4,33 +4,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  # scan:
-  #   name: Security Scan
-  #   runs-on: ubuntu-latest
-  #   environment: DEV
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     security-events: write
-  #   env:
-  #     TF_WORKDIR: ./infra/envs/nonprod/persistent
-  #   steps:
-  #     - name: Checkout repo
-  #       uses: actions/checkout@v4
-  #       with:
-  #         persist-credentials: false
+  scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    env:
+      TF_WORKDIR: ./infra/envs/nonprod/persistent
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-  #     - name: tfsec
-  #       uses: aquasecurity/tfsec-sarif-action@v0.1.0
-  #       with:
-  #         working_directory: ${{ env.TF_WORKDIR }}
-  #         full_repo_scan: true
-  #         sarif_file: tfsec-results.sarif
+      - name: tfsec
+        uses: aquasecurity/tfsec-sarif-action@v0.1.0
+        with:
+          working_directory: ${{ env.TF_WORKDIR }}
+          full_repo_scan: true
+          sarif_file: tfsec-results.sarif
 
-  #     - name: Upload SARIF to GitHub Security tab
-  #       uses: github/codeql-action/upload-sarif@v3
-  #       with:
-  #         sarif_file: tfsec-results.sarif
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: tfsec-results.sarif
+
   plan:
     name: Plan
     runs-on: ubuntu-latest
@@ -40,7 +40,7 @@ jobs:
       TF_WORKDIR: ./infra/envs/nonprod/persistent
       TG_NON_INTERACTIVE: true
       TG_DISABLE_BUCKET_UPDATE: true
-    # needs: scan
+    needs: scan
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -65,14 +65,40 @@ jobs:
 
       - name: Terragrunt Plan
         run: |
-          pwd
-          terragrunt plan -out=persistent.tfplan --all --working-dir ${{ env.TF_WORKDIR }}
-          pwd
-          ls -la
+          terragrunt plan --all --working-dir ${{ env.TF_WORKDIR }}
 
+  apply:
+    name: Apply
+    runs-on: ubuntu-latest
+    environment: NONPROD_APPROVAL
+    env:
+      AWS_REGION: ap-south-1
+      TF_WORKDIR: ./infra/envs/nonprod/persistent
+      TG_NON_INTERACTIVE: true
+      TG_DISABLE_BUCKET_UPDATE: true
+    needs: plan
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Upload plan
-        uses: actions/upload-artifact@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: tfplan
-          path: persistent.tfplan
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+
+      - name: Install Terragrunt
+        run: |
+          curl -Lo /usr/local/bin/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.88.1/terragrunt_linux_amd64
+          chmod +x /usr/local/bin/terragrunt
+          terragrunt --version
+
+      - name: Terragrunt Apply
+        run: |
+          terragrunt apply --all --working-dir ${{ env.TF_WORKDIR }}
