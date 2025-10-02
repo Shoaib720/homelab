@@ -19,6 +19,7 @@ jobs:
         with:
           soft_fail: true
           format: sarif
+          github_token: ${{ github.token }}
           working_directory: ${{ env.TF_WORKDIR }}
           additional_args: --force-all-dirs --out tfsec-results.sarif
 
