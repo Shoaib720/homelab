@@ -101,4 +101,4 @@ jobs:
 
       - name: Terragrunt Apply
         run: |
-          terragrunt apply --all --working-dir ${{ env.TF_WORKDIR }}
+          terragrunt apply --all --working-dir ${{ env.TF_WORKDIR }} -auto-approve
