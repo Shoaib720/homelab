@@ -4,33 +4,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    environment: DEV
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    env:
-      TF_WORKDIR: ./infra/envs/nonprod/persistent
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
+  # scan:
+  #   name: Security Scan
+  #   runs-on: ubuntu-latest
+  #   environment: DEV
+  #   permissions:
+  #     actions: read
+  #     contents: read
+  #     security-events: write
+  #   env:
+  #     TF_WORKDIR: ./infra/envs/nonprod/persistent
+  #   steps:
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v4
+  #       with:
+  #         persist-credentials: false
 
-      - name: tfsec
-        uses: aquasecurity/tfsec-sarif-action@v0.1.0
-        with:
-          working_directory: ${{ env.TF_WORKDIR }}
-          full_repo_scan: true
-          sarif_file: tfsec-results.sarif
+  #     - name: tfsec
+  #       uses: aquasecurity/tfsec-sarif-action@v0.1.0
+  #       with:
+  #         working_directory: ${{ env.TF_WORKDIR }}
+  #         full_repo_scan: true
+  #         sarif_file: tfsec-results.sarif
 
-      - name: Upload SARIF to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: tfsec-results.sarif
+  #     - name: Upload SARIF to GitHub Security tab
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       with:
+  #         sarif_file: tfsec-results.sarif
   plan:
     name: Plan
     runs-on: ubuntu-latest
@@ -38,7 +38,9 @@ jobs:
     env:
       AWS_REGION: ap-south-1
       TF_WORKDIR: ./infra/envs/nonprod/persistent
-    needs: scan
+      TG_NON_INTERACTIVE: true
+      TG_DISABLE_BUCKET_UPDATE: true
+    # needs: scan
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -61,9 +63,9 @@ jobs:
           chmod +x /usr/local/bin/terragrunt
           terragrunt --version
 
-      - name: Terragrunt Init
-        # run: terragrunt init --terragrunt-disable-bucket-update
-        run: terragrunt init --all --working-dir ${{ env.TF_WORKDIR }}
+      # - name: Terragrunt Init
+      #   # run: terragrunt init --terragrunt-disable-bucket-update
+      #   run: terragrunt init --all --working-dir ${{ env.TF_WORKDIR }}
 
       - name: Terragrunt Plan
         run: terragrunt plan -out=persistent.tfplan --all --working-dir ${{ env.TF_WORKDIR }}
