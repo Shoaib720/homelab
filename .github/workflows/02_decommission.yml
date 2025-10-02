@@ -2,9 +2,6 @@ name: Decommision Homelab EKS
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/provision-github-action
 
 jobs:
   infrastructure:
