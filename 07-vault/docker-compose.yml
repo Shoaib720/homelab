@@ -18,7 +18,8 @@ services:
     # Persist Raft data and provide config
     volumes:
       - ./vault.hcl:/vault/config/vault.hcl:ro
-      - vault-raft-data:/vault/data
+      - vault_data:/vault/file
+      - vault_logs:/vault/logs
 
     environment:
       VAULT_ADDR: "http://0.0.0.0:8200"
@@ -33,4 +34,5 @@ services:
       -config=/vault/config/vault.hcl
 
 volumes:
-  vault-raft-data:
+  vault_data:
+  vault_logs:
