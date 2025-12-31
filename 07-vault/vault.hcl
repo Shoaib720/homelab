@@ -8,6 +8,6 @@ storage "raft" {
   node_id = "node1"
 }
 
-api_addr     = "http://0.0.0.0:8200"
-cluster_addr = "http://0.0.0.0:8201"
+api_addr     = "http://homelab.local:8200"
+cluster_addr = "http://homelab.local:8201"
 ui           = true
